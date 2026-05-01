@@ -1,6 +1,7 @@
 const express = require('express')
 const userModel = require("../models/user.model")
 const jwt = require("jsonwebtoken");
+const crypto = require("crypto")//for hashing the password
 
 const authRouter = express.Router() //defined a router
 
@@ -17,8 +18,11 @@ authRouter.post("/register",async(req,res)=>{
         })
     }
 
+    //hash the password
+    const hash = crypto.createHash("md5").update(password).digest("hex")
+
     const user = await userModel.create({
-        email,password,name
+        email,password:hash,name
     })
 
     //server with signature(digital signature)
@@ -64,8 +68,9 @@ authRouter.post("/login", async (req,res)=>{
             message : "User not found with this email address."
         })
     }
-    //if the email exists then check if the password is correct not not
-    const isPasswordMatched = user.password === password
+    //if the email exists then check if the password is correct or not by hashing the password
+    const isPasswordMatched = user.password === crypto.createHash("md5").update(password).digest("hex")//user.password is the hashed password in the Database
+
     if(!isPasswordMatched){
         return res.status(401).json({
             message : "Invalid Password. Please try again."
