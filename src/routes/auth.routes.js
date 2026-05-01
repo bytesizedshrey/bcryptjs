@@ -1,5 +1,6 @@
 const express = require('express')
 const userModel = require("../models/user.model")
+const jwt = require("jsonwebtoken");
 
 const authRouter = express.Router() //defined a router
 
@@ -18,10 +19,23 @@ authRouter.post("/register",async(req,res)=>{
     const user = await userModel.create({
         email,password,name
     })
+
+    //server with signature(digital signature)
+    const token = jwt.sign(
+        {
+            id: user._id,
+            email: user.email
+        },
+        process.env.JWT_SECRET
+    )
+
+    res.cookie("jwt_token", token)//server will set token on the cookie
+
     //Send Response
     res.status(201).json({
         message : "user registered",
-        user
+        user,
+        token
     })
 })
 
